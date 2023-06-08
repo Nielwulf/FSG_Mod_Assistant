@@ -2141,9 +2141,27 @@ function fileOperation_post(type, fileMap) {
 					log.log.info(`Copy File : ${file[0]} -> ${file[1]}`, 'file-ops')
 
 					sourceFileStat = fs.statSync(file[0])
-					
+					if ( fs.existsSync(file[1]) ) {
+						log.log.info(`${file[1]} exists.`)
+						log.log.info(`Deleting File ${file[1]}`) 
+						fs.unlinkSync(file[1], (err) => {
+							if (err) {
+								log.log.error(`Unable to delete ${file[1]}`)
+							} else {
+								log.log.info(`Deleted file ${file[1]}`)
+							}
+						})
+					}
+					/** If source is not a directory, it will create a symlink in the mod directory. 
+					 * Otherwise it will copy all files from the source directory to the target */
 					if ( ! sourceFileStat.isDirectory() ) {
-						fs.copyFileSync(file[0], file[1])
+						fs.symlinkSync(file[0], file[1], 'file', (err) => {
+							if (err) {
+								log.log.error('Unable to create symlink')
+							} else {
+								log.log.info('Symlink Created')
+							}
+						})
 					} else {
 						fs.cpSync(file[0], file[1], { recursive : true })
 					}
